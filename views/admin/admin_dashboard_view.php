@@ -77,6 +77,11 @@ $email = $user['email'] ?? 'Sin email';
                 <div class="card">
                     <h2>Hola 👋</h2>
                     <p>Configurá los <strong>colores de entorno</strong> del sistema (texto, fondo y acento). Se aceptan valores <code>#hex</code> (3/6 dígitos) o <code>rgb(r,g,b)</code>.</p>
+                    <div class="form-buttons" style="margin-top:.5rem;">
+                        <button type="button" class="btn btn-info" id="btn-force-refresh" aria-label="Limpiar caché y actualizar">
+                            Actualizar página
+                        </button>
+                    </div>
                 </div>
 
                 <div class="card" id="card-form-entorno">
@@ -1420,6 +1425,84 @@ $email = $user['email'] ?? 'Sin email';
             listar();
         })();
     </script>
+
+    <script type="module">
+        (() => {
+            const btn = document.querySelector('#btn-force-refresh');
+            if (!btn) return;
+
+            const alertFn = (type, msg) => {
+                try {
+                    window.showAlert?.(type, msg);
+                } catch (_) {}
+                if (!window.showAlert) console.log(`[${type}] ${msg}`);
+            };
+
+            async function clearCaches() {
+                if (!('caches' in window)) return;
+                try {
+                    const names = await caches.keys();
+                    await Promise.all(names.map((n) => caches.delete(n)));
+                } catch (_) {
+                    /* noop */ }
+            }
+
+            async function unregisterServiceWorkers() {
+                if (!('serviceWorker' in navigator)) return;
+                try {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map((r) => r.unregister()));
+                } catch (_) {
+                    /* noop */ }
+            }
+
+            async function clearIndexedDB() {
+                // indexedDB.databases() no está en todos los navegadores; usar si existe
+                try {
+                    if (indexedDB && 'databases' in indexedDB) {
+                        const dbs = await indexedDB.databases();
+                        await Promise.all(
+                            dbs.map((db) => db && db.name && indexedDB.deleteDatabase(db.name))
+                        );
+                    }
+                } catch (_) {
+                    /* noop */ }
+            }
+
+            function clearWebStorage() {
+                try {
+                    localStorage.clear();
+                } catch (_) {}
+                try {
+                    sessionStorage.clear();
+                } catch (_) {}
+            }
+
+            function cacheBustUrl(url) {
+                const u = new URL(url, window.location.href);
+                u.searchParams.set('v', String(Date.now()));
+                return u.toString();
+            }
+
+            async function forceRefresh() {
+                alertFn('info', 'Limpiando caché local y recargando…');
+
+                await Promise.all([
+                    clearCaches(),
+                    unregisterServiceWorkers(),
+                    clearIndexedDB()
+                ]);
+                clearWebStorage();
+
+                // Recarga con parámetro de cache-busting para forzar revalidación.
+                const dest = cacheBustUrl(window.location.href.split('#')[0]);
+                window.location.replace(dest);
+            }
+
+            btn.addEventListener('click', forceRefresh);
+        })();
+    </script>
+
 
 </body>
 
