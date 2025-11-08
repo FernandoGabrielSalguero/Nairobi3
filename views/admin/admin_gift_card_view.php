@@ -556,14 +556,16 @@ $email   = $user['email'] ?? 'Sin email';
                 doc.setFillColor(10, 40, 36); // verde muy oscuro
                 doc.rect(0, 0, 210, 297, 'F');
 
-                // === Cargar logo SVG desde /assets ===
+                // === Cargar logo SVG desde /assets, forzándolo a blanco y alta resolución ===
                 const logoUrl = '../../assets/logo_editado_Nairobi.svg';
-                const logoPngDataUrl = await svgToPngDataUrl(logoUrl, 140, 140);
-                // Posicionar centrado arriba
-                const logoW = 40,
-                    logoH = 40;
+                // TAMAÑO RASTER DEL SVG: estas dimensiones controlan la nitidez del PNG generado
+                const logoPngDataUrl = await svgToPngDataUrl(logoUrl, 512, 512); // TAMAÑO (raster)
+
+                // === Posicionar centrado arriba con mayor tamaño ===
+                const logoW = 70, // TAMAÑO (mm)  <-- ajustar aquí el ancho final en el PDF
+                    logoH = 70; // TAMAÑO (mm)  <-- ajustar aquí el alto final en el PDF
                 const logoX = (210 - logoW) / 2;
-                const logoY = 28;
+                const logoY = 20;
                 doc.addImage(logoPngDataUrl, 'PNG', logoX, logoY, logoW, logoH);
 
                 // === Tipografías y color ===
@@ -572,13 +574,13 @@ $email   = $user['email'] ?? 'Sin email';
                 // Título "Hola, [Nombre]" + "¡Tenes un obsequio!"
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(22);
-                doc.text(`Hola, ${row.nombre}`, 105, 90, {
+                doc.text(`Hola, ${row.nombre}`, 105, 100, {
                     align: 'center'
                 });
 
                 doc.setFont('helvetica', 'italic');
                 doc.setFontSize(20);
-                doc.text('¡Tenes un obsequio!', 105, 102, {
+                doc.text('¡Tenes un obsequio!', 105, 114, {
                     align: 'center'
                 });
 
@@ -587,7 +589,7 @@ $email   = $user['email'] ?? 'Sin email';
                     doc.setFont('helvetica', 'italic');
                     doc.setFontSize(13);
                     const cuerpo = doc.splitTextToSize(String(row.texto), 170);
-                    doc.text(cuerpo, 105, 118, {
+                    doc.text(cuerpo, 105, 130, {
                         align: 'center'
                     });
                 }
@@ -597,7 +599,7 @@ $email   = $user['email'] ?? 'Sin email';
                 doc.setFontSize(14);
                 const canje = `Podes canjearlo hasta ${row.fecha_vencimiento} usando el siguiente código ${row.codigo}`;
                 const wrapped = doc.splitTextToSize(canje, 170);
-                doc.text(wrapped, 105, 145, {
+                doc.text(wrapped, 105, 155, {
                     align: 'center'
                 });
 
@@ -611,13 +613,31 @@ $email   = $user['email'] ?? 'Sin email';
                 doc.save(`giftcard_${row.codigo}.pdf`);
             }
 
-
             // Utilidad: convertir un SVG (ruta) a DataURL PNG para jsPDF
+            // Fuerza el SVG a blanco (fill/stroke) y permite controlar tamaño de raster (px)
             async function svgToPngDataUrl(url, targetW = 120, targetH = 120) {
-                const svgText = await fetch(url).then(r => {
+                let svgText = await fetch(url).then(r => {
                     if (!r.ok) throw new Error('No se pudo cargar el logo');
                     return r.text();
                 });
+
+                // Inyectar estilo global para forzar blanco en TODO el SVG
+                // y setear width/height para controlar el viewport del raster.
+                // TAMAÑO SVG INTERNO (px): ajustar si se desea
+                const whiteStyle = `<style>*{fill:#ffffff!important;stroke:#ffffff!important;}</style>`;
+                svgText = svgText
+                    // Insertar <style> justo después de la etiqueta <svg ...>
+                    .replace(/<svg([^>]*?)>/i, (m, attrs) => {
+                        // Si no hay width/height, los agregamos para consistencia del raster
+                        let a = attrs;
+                        if (!/width=/.test(a)) a += ` width="${targetW}"`; // TAMAÑO
+                        if (!/height=/.test(a)) a += ` height="${targetH}"`; // TAMAÑO
+                        return `<svg${a}>${whiteStyle}`;
+                    })
+                    // Quitar fills/strokes inline que podrían interferir (opcional, el !important ya alcanza)
+                    .replace(/\sfill="[^"]*"/gi, '')
+                    .replace(/\sstroke="[^"]*"/gi, '');
+
                 const svgBlob = new Blob([svgText], {
                     type: 'image/svg+xml;charset=utf-8'
                 });
@@ -631,8 +651,8 @@ $email   = $user['email'] ?? 'Sin email';
                 });
 
                 const canvas = document.createElement('canvas');
-                canvas.width = targetW;
-                canvas.height = targetH;
+                canvas.width = targetW; // TAMAÑO (px) del raster
+                canvas.height = targetH; // TAMAÑO (px) del raster
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, targetW, targetH);
