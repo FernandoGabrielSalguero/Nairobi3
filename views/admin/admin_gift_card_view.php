@@ -597,7 +597,15 @@ $email   = $user['email'] ?? 'Sin email';
                 // Línea informativa: "Podes canjearlo hasta ... usando el siguiente código ..."
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(14);
-                const canje = `Podes canjearlo hasta ${row.fecha_vencimiento} usando el siguiente código ${row.codigo}`;
+                // === Formatear fecha YYYY-MM-DD → DD-MM-YYYY ===
+                let fechaFormateada = row.fecha_vencimiento;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(row.fecha_vencimiento)) {
+                    const [y, m, d] = row.fecha_vencimiento.split('-');
+                    fechaFormateada = `${d}-${m}-${y}`; // <-- FORMATO dd-mm-yyyy
+                }
+
+                // Línea informativa
+                const canje = `Podes canjearlo hasta ${fechaFormateada} usando el siguiente código ${row.codigo}`;
                 const wrapped = doc.splitTextToSize(canje, 170);
                 doc.text(wrapped, 105, 155, {
                     align: 'center'
