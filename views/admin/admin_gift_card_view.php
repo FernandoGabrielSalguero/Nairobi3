@@ -557,7 +557,7 @@ $email   = $user['email'] ?? 'Sin email';
                 doc.rect(0, 0, 210, 297, 'F');
 
                 // === Cargar logo SVG desde /assets ===
-                const logoUrl = '../../assets/logo_giftCard.svg';
+                const logoUrl = '../../assets/marcaGift_1.png';
                 const logoPngDataUrl = await svgToPngDataUrl(logoUrl, 140, 140);
                 // Posicionar centrado arriba
                 const logoW = 40,
