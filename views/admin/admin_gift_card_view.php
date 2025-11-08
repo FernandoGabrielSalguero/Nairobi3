@@ -613,54 +613,56 @@ $email   = $user['email'] ?? 'Sin email';
                 doc.save(`giftcard_${row.codigo}.pdf`);
             }
 
-        // Utilidad: convertir un SVG (ruta) a DataURL PNG para jsPDF
-// Blanqueo garantizado: convierte TODOS los píxeles no transparentes a blanco.
-// TAMAÑO (px) controla la nitidez del raster.
-async function svgToPngDataUrl(url, targetW = 120, targetH = 120) {
-    let svgText = await fetch(url).then(r => {
-        if (!r.ok) throw new Error('No se pudo cargar el logo');
-        return r.text();
-    });
+            // Utilidad: convertir un SVG (ruta) a DataURL PNG para jsPDF
+            // Blanqueo garantizado: convierte TODOS los píxeles no transparentes a blanco.
+            // TAMAÑO (px) controla la nitidez del raster.
+            async function svgToPngDataUrl(url, targetW = 150, targetH = 150) {
+                let svgText = await fetch(url).then(r => {
+                    if (!r.ok) throw new Error('No se pudo cargar el logo');
+                    return r.text();
+                });
 
-    // Opcional: intentar forzar blanco vía CSS (por si el SVG respeta estilos)
-    const whiteStyle = `<style>*{fill:#ffffff!important;stroke:#ffffff!important;}</style>`;
-    svgText = svgText
-        .replace(/<svg([^>]*?)>/i, (m, attrs) => {
-            let a = attrs;
-            if (!/width=/.test(a))  a += ` width="${targetW}"`;   // TAMAÑO
-            if (!/height=/.test(a)) a += ` height="${targetH}"`;  // TAMAÑO
-            return `<svg${a}>${whiteStyle}`;
-        });
+                // Opcional: intentar forzar blanco vía CSS (por si el SVG respeta estilos)
+                const whiteStyle = `<style>*{fill:#ffffff!important;stroke:#ffffff!important;}</style>`;
+                svgText = svgText
+                    .replace(/<svg([^>]*?)>/i, (m, attrs) => {
+                        let a = attrs;
+                        if (!/width=/.test(a)) a += ` width="${targetW}"`; // TAMAÑO
+                        if (!/height=/.test(a)) a += ` height="${targetH}"`; // TAMAÑO
+                        return `<svg${a}>${whiteStyle}`;
+                    });
 
-    const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
+                const svgBlob = new Blob([svgText], {
+                    type: 'image/svg+xml;charset=utf-8'
+                });
+                const svgUrl = URL.createObjectURL(svgBlob);
 
-    const img = await new Promise((resolve, reject) => {
-        const i = new Image();
-        i.onload = () => resolve(i);
-        i.onerror = reject;
-        i.src = svgUrl;
-    });
+                const img = await new Promise((resolve, reject) => {
+                    const i = new Image();
+                    i.onload = () => resolve(i);
+                    i.onerror = reject;
+                    i.src = svgUrl;
+                });
 
-    const canvas = document.createElement('canvas');
-    canvas.width = targetW;   // TAMAÑO (px) del raster
-    canvas.height = targetH;  // TAMAÑO (px) del raster
-    const ctx = canvas.getContext('2d');
+                const canvas = document.createElement('canvas');
+                canvas.width = targetW; // TAMAÑO (px) del raster
+                canvas.height = targetH; // TAMAÑO (px) del raster
+                const ctx = canvas.getContext('2d');
 
-    // 1) Dibujamos el SVG rasterizado
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, targetW, targetH);
+                // 1) Dibujamos el SVG rasterizado
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, targetW, targetH);
 
-    // 2) Reemplazamos el color de TODOS los píxeles no transparentes por blanco
-    //    (no depende de estilos internos del SVG)
-    ctx.globalCompositeOperation = 'source-in';
-    ctx.fillStyle = '#ffffff';           // BLANCO PURO
-    ctx.fillRect(0, 0, targetW, targetH);
-    ctx.globalCompositeOperation = 'source-over';
+                // 2) Reemplazamos el color de TODOS los píxeles no transparentes por blanco
+                //    (no depende de estilos internos del SVG)
+                ctx.globalCompositeOperation = 'source-in';
+                ctx.fillStyle = '#ffffff'; // BLANCO PURO
+                ctx.fillRect(0, 0, targetW, targetH);
+                ctx.globalCompositeOperation = 'source-over';
 
-    URL.revokeObjectURL(svgUrl);
-    return canvas.toDataURL('image/png');
-}
+                URL.revokeObjectURL(svgUrl);
+                return canvas.toDataURL('image/png');
+            }
 
             // Primera carga
             cargarTabla();
