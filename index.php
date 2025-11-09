@@ -6,14 +6,14 @@
   <title>Nairobi Lounge | Carta</title>
 
   <!-- CSS del framework (CDN) -->
-  <link rel="preload" href="https://www.framework.impulsagroup.com/assets/css/framework.css" as="style" />
-  <link rel="stylesheet" href="https://www.framework.impulsagroup.com/assets/css/framework.css" />
+  <link rel="preload" href="https://www.fernandosalguero.com/cdn/assets/css/framework.css" as="style" />
+  <link rel="stylesheet" href="https://www.fernandosalguero.com/cdn/assets/css/framework.css" />
 
   <!-- Material Icons (necesario para <span class="material-icons">menu</span>) -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
   <!-- JS del framework (CDN) -->
-  <script defer src="https://www.framework.impulsagroup.com/assets/javascript/framework.js"></script>
+  <script defer src="https://www.fernandosalguero.com/cdn/assets/javascript/framework.js"></script>
 </head>
 <body>
   <?php require __DIR__ . '/views/public/header_view.php'; ?>
@@ -23,6 +23,3 @@
   <script defer src="/controllers/header_controller.php?action=script"></script>
 </body>
 </html>
-
-
-
