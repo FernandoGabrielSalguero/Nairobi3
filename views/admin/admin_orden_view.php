@@ -17,9 +17,9 @@ declare(strict_types=1);
     <!-- Tipografia -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Forum&display=swap">
 
-    <!-- Framework CDN -->
-    <link rel="stylesheet" href="https://www.fernandosalguero.com/cdn/assets/css/framework.css">
-    <script src="https://www.fernandosalguero.com/cdn/assets/javascript/framework.js" defer></script>
+    <!-- Framework Success desde CDN -->
+    <link rel="stylesheet" href="https://www.framework.impulsagroup.com/assets/css/framework.css">
+    <script src="https://www.framework.impulsagroup.com/assets/javascript/framework.js" defer></script>
 
     <!-- PDF libs -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
